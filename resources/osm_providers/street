@@ -1,0 +1,13 @@
+{
+    "Enabled": true,
+    "UrlTemplate": "https://tile.openstreetmap.org/%z/%x/%y.png",
+    "ImageFormat": "png",
+    "QImageFormat": "Indexed8",
+    "ID": "osm-street-ingep",
+    "MapCopyRight": "<a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+    "DataCopyRight": "<a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+    "MinimumZoomLevel": 0,
+    "MaximumZoomLevel": 19,
+    "Highdpi": false,
+    "TileSize": 256
+}

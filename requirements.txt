@@ -1,0 +1,24 @@
+PySide6>=6.7.0
+openpyxl>=3.1.0
+xlrd>=2.0.0
+reportlab>=4.0.0
+python-docx>=1.1.0
+pdfplumber>=0.10.0
+anthropic>=0.25.0
+werkzeug>=3.0.0
+groq>=1.2.0
+google-genai>=1.0.0
+openai>=1.0.0
+rapidfuzz>=3.0.0
+odfpy>=1.4.1
+pypdf>=4.0.0
+pyinstaller>=6.0.0
+Pillow>=10.0.0
+cryptography>=42.0.0
+pyodbc>=5.0.0
+access-parser>=0.0.6
+# RAG Fase 2 — recuperación semántica de partidas (embeddings estáticos, sin
+# PyTorch). Trae tokenizers/safetensors/huggingface_hub. El MODELO (~147 MB) NO
+# es pip: se baja de R2 al build (gitignored). scikit-learn NO se incluye (solo
+# se usó para PREPARAR el modelo reducido, no en runtime).
+model2vec>=0.8.0

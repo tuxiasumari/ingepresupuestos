@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# AppRun — punto de entrada del AppImage de IngePresupuestos.
+#
+# Cuando el usuario hace doble click en el .AppImage, AppImage monta el
+# contenido en /tmp/.mount_XXXXXX/ y ejecuta ESTE script. Nuestra única
+# tarea es lanzar el binario real (que vive en usr/bin/ingepresupuestos/).
+#
+# El binario fue generado por PyInstaller con `_internal/` adentro
+# (libs Python, Qt, cryptography, etc.), así que es totalmente
+# autocontenido. No necesitamos manipular LD_LIBRARY_PATH.
+
+set -e
+
+# Resolver HERE = directorio donde está montado el AppImage
+HERE="$(dirname "$(readlink -f "${0}")")"
+
+# Algunas variables que las apps Qt necesitan para encontrar sus assets
+# cuando arrancan desde un mount AppImage (no desde la ruta original):
+export APPDIR="${HERE}"
+export APPIMAGE_ORIGINAL_LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+
+# Ejecutar el binario real con todos los args pasados al AppImage
+exec "${HERE}/usr/bin/ingepresupuestos/ingepresupuestos" "$@"

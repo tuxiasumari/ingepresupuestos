@@ -1,0 +1,133 @@
+name: Build Linux
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# Permiso para que el GITHUB_TOKEN automático pueda crear releases.
+# Sin esto, action-gh-release falla con 403.
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v5
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Dependencias del sistema (Qt6 + AppImage + mdbtools)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 \
+            libxcb-xinerama0 libxcb-xkb1 libegl1 libgl1 mdbtools \
+            libfuse2 wget
+
+      - name: Instalar dependencias Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Modelo de embeddings RAG Fase 2 (model2vec int8, ~147 MB). Gitignored →
+      # se baja de R2. Tolerante: si falla/no está, el .spec lo omite y la app
+      # degrada a fuzzy (Fase 1). Súbelo a R2 antes del release (RELEASE_CHECKLIST).
+      - name: Descargar modelo RAG (model2vec) desde R2
+        run: |
+          mkdir -p resources/models
+          if curl -fsSL "https://downloads.ingepresupuestos.com/models/potion-multilingual-128M.tar.gz" -o /tmp/m2v.tar.gz; then
+            tar -xzf /tmp/m2v.tar.gz -C resources/models/ && echo "modelo RAG OK"
+          else
+            echo "::warning::modelo RAG no disponible en R2 — el binario saldrá sin Fase 2 (usa fuzzy)"
+          fi
+
+      - name: Compilar con PyInstaller
+        run: pyinstaller ingepresupuestos.spec --noconfirm
+
+      - name: Incluir installer y README en el bundle .tar.gz
+        run: |
+          cp install-linux.sh dist/ingepresupuestos/
+          chmod +x dist/ingepresupuestos/install-linux.sh
+          # Pequeño README dentro del .tar.gz con instrucciones
+          cat > dist/ingepresupuestos/LEEME.txt <<'EOF'
+          IngePresupuestos para Linux
+
+          Recomendado: usar el .AppImage (IngePresupuestos-vX.Y.Z-x86_64.AppImage).
+          Este .tar.gz es para usuarios técnicos / instalaciones del sistema.
+
+          === Modo portable (este .tar.gz) ===
+
+          Ejecutar sin instalar:
+            ./ingepresupuestos
+
+          Instalar en el sistema (recomendado para uso diario):
+            Para que aparezca en el menú de aplicaciones y dock:
+              ./install-linux.sh
+
+            Para desinstalar:
+              ./install-linux.sh --uninstall
+
+          Los datos del usuario se guardan en:
+            ~/.local/share/ingepresupuestos/
+
+          Soporte: https://github.com/tuxiasumari/ingepresupuestos-pyside6
+          EOF
+
+      - name: Crear tarball
+        run: |
+          cd dist
+          tar czf ingepresupuestos-linux.tar.gz ingepresupuestos
+          ls -la
+
+      # ── Construir el AppImage ──────────────────────────────────────────────
+      # Tras PyInstaller, armar AppDir + correr appimagetool.
+      # El script `installer/build-appimage.sh` baja appimagetool
+      # automáticamente la primera vez.
+      - name: Extraer versión del tag (o usar default)
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION=$(grep '^CURRENT_VERSION' core/update_manager.py | head -1 | cut -d'"' -f2)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Compilando AppImage para versión: $VERSION"
+
+      - name: Construir AppImage
+        run: |
+          ./installer/build-appimage.sh "${{ steps.ver.outputs.version }}"
+
+      - name: Listar archivos generados
+        run: |
+          ls -lh dist/
+
+      - name: Subir artifacts (descargables desde la corrida)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingepresupuestos-linux
+          path: |
+            dist/ingepresupuestos-linux.tar.gz
+            dist/IngePresupuestos-*-x86_64.AppImage
+          retention-days: 3
+
+      # Si el workflow se disparó por tag (v0.5.0, v1.0.0, etc.),
+      # publica AMBOS archivos en la sección Releases del repo.
+      - name: Publicar en Releases (solo en tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/ingepresupuestos-linux.tar.gz
+            dist/IngePresupuestos-*-x86_64.AppImage
+          generate_release_notes: true

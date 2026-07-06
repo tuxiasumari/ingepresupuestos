@@ -1,0 +1,99 @@
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual env (NO subir; cada dev recrea con `pip install -r requirements.txt`)
+venv/
+.venv/
+env/
+
+# ─── Datos del usuario (viven en USER_DATA_DIR, NO en el repo) ──────────────
+# La BD activa y los backups quedan en ~/.local/share/ingepresupuestos/
+# Estos paths son los LEGACY (dejados por la migración) — no subirlos.
+presupuestos.db
+presupuestos.db.legacy_*
+presupuestos_backup_*.db
+*.db-shm
+*.db-wal
+.session
+
+# Carpetas legacy de uploads/backups (movidas a USER_DATA_DIR)
+/uploads/
+/backups/
+
+# Archivos de licencia generados por el usuario en runtime
+license.json
+update_state.json
+
+# Clave PRIVADA de firmado de licencias — JAMÁS subir al repo.
+# Vive en ~/.local/share/ingepresupuestos/licencia/license_private.pem
+# (sólo en la máquina de Marco). La PÚBLICA sí va al repo en
+# resources/license_public.pem porque el binario la necesita para verificar.
+*license_private*.pem
+*license_priv*.pem
+
+# ─── Recursos pesados que no van al repo ─────────────────────────────────────
+# Screenshots de desarrollo (mantener fuera, ~3 GB)
+capturas/
+
+# Modelo de embeddings de la Fase 2 RAG (model2vec int8, ~147 MB). NO va a git
+# (infla el repo). Se obtiene aparte y se empaqueta en el build (ver RAG Fase 2).
+resources/models/
+
+# Builds / artefactos de PyInstaller (todavía no existen, pero al crearlos…)
+build/
+dist/
+*.spec
+# EXCEPCIÓN: nuestro spec custom para PyInstaller SÍ va al repo
+!ingepresupuestos.spec
+*.egg-info/
+release/
+
+# appimagetool descargado por installer/build-appimage.sh — no va al repo
+.appimagetool
+
+# ─── Sistema operativo ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+
+# ─── Editores / IDEs ─────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ─── Credenciales y configuración local ──────────────────────────────────────
+.env
+.env.local
+*.local.json
+secrets/
+
+# ─── Claude Code metadata ────────────────────────────────────────────────────
+.claude/
+.serena/
+
+# ─── Logs / temporales ───────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.bak.*
+*.orig
+.cache/
+
+# ─── EXCEPCIÓN: queremos SÍ subir el seed DB (es parte del producto) ─────────
+!presupuestos_seed.db
+resources/fonts/_backup_variable/
+
+# Icono suelto de pruebas (no es el ícono del producto ingepresupuestos.png/.ico)
+ingepresupuesto-icon.png
+presupuestos_seed_publico.db

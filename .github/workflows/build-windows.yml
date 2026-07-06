@@ -1,0 +1,163 @@
+name: Build Windows
+
+# Cuándo correr este workflow:
+#   - Push de un tag versión vX.Y.Z  → build automático + sube a Releases
+#   - Manualmente desde la pestaña Actions de GitHub (workflow_dispatch)
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# Permiso para que el GITHUB_TOKEN automático pueda crear releases.
+# Sin esto, action-gh-release falla con 403.
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v5
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Modelo de embeddings RAG Fase 2 (model2vec int8, ~147 MB). Gitignored →
+      # se baja de R2. Tolerante: si falla/no está, el .spec lo omite y la app
+      # degrada a fuzzy (Fase 1). Súbelo a R2 antes del release (RELEASE_CHECKLIST).
+      - name: Descargar modelo RAG (model2vec) desde R2
+        shell: bash
+        run: |
+          mkdir -p resources/models
+          if curl -fsSL "https://downloads.ingepresupuestos.com/models/potion-multilingual-128M.tar.gz" -o /tmp/m2v.tar.gz; then
+            tar -xzf /tmp/m2v.tar.gz -C resources/models/ && echo "modelo RAG OK"
+          else
+            echo "::warning::modelo RAG no disponible en R2 — el binario saldrá sin Fase 2 (usa fuzzy)"
+          fi
+
+      - name: Compilar con PyInstaller
+        shell: bash
+        run: |
+          pyinstaller ingepresupuestos.spec --noconfirm
+
+      - name: Listar resultado
+        shell: bash
+        run: |
+          ls -la dist/
+          du -sh dist/ingepresupuestos/
+
+      - name: Incluir README en el bundle
+        shell: bash
+        run: |
+          cat > dist/ingepresupuestos/LEEME.txt <<'EOF'
+          IngePresupuestos para Windows
+
+          Recomendado: usar el INSTALADOR (ingepresupuestos-setup-vX.Y.Z.exe).
+          Este .zip es solo para usuarios técnicos que prefieran versión portable.
+
+          === Modo portable (este .zip) ===
+
+          1. Descomprimí esta carpeta donde quieras (ej. C:\IngePresupuestos\)
+          2. Doble click en ingepresupuestos.exe
+          3. Si Windows muestra "Windows protegió tu PC" → "Más información"
+             → "Ejecutar de todas formas" (falta firma digital, se agrega
+             cuando salgamos de beta).
+
+          Crear acceso directo en el menú Inicio:
+            Click derecho sobre ingepresupuestos.exe → "Anclar al menú Inicio"
+
+          Los datos del usuario se guardan en:
+            %APPDATA%\ingepresupuestos\
+
+          Si al abrir aparece "Failed to load python312.dll", instalá:
+            https://aka.ms/vs/17/release/vc_redist.x64.exe
+            (Visual C++ Redistributable, oficial de Microsoft).
+
+          Soporte: https://github.com/tuxiasumari/ingepresupuestos-pyside6
+          EOF
+
+      - name: Crear ZIP portable
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/ingepresupuestos -DestinationPath dist/ingepresupuestos-windows.zip
+
+      # ── Construir el INSTALADOR con Inno Setup ─────────────────────────────
+      # Windows runner trae Inno Setup 6 preinstalado en C:\Program Files (x86)\Inno Setup 6\
+      # Compilamos installer\ingepresupuestos.iss pasando la versión desde el tag.
+      # Output: dist\ingepresupuestos-setup-vX.Y.Z.exe
+      - name: Extraer versión del tag (o usar default)
+        id: ver
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION=$(grep '^CURRENT_VERSION' core/update_manager.py | head -1 | cut -d'"' -f2)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Compilando installer para versión: $VERSION"
+
+      - name: Compilar instalador con Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-Not (Test-Path $iscc)) {
+            $iscc = "C:\Program Files\Inno Setup 6\ISCC.exe"
+          }
+          if (-Not (Test-Path $iscc)) {
+            Write-Error "Inno Setup no encontrado"
+            exit 1
+          }
+          & $iscc "/DMyAppVersion=${{ steps.ver.outputs.version }}" "installer\ingepresupuestos.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # ── Empaquetar MSIX para la Microsoft Store ────────────────────────────
+      # Se hace DESPUÉS de Inno Setup y del ZIP para no meter el manifiesto en
+      # esos paquetes. El .msix se sube SIN FIRMAR: Microsoft lo firma al
+      # publicar en la Store. makeappx.exe viene con el Windows SDK del runner.
+      - name: Empaquetar MSIX (Microsoft Store)
+        shell: pwsh
+        run: |
+          & "installer\msix\package-msix.ps1" `
+            -Version "${{ steps.ver.outputs.version }}" `
+            -DistDir "dist\ingepresupuestos" `
+            -Output "dist\IngePresupuestos-${{ steps.ver.outputs.version }}.msix"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Listar archivos generados
+        shell: bash
+        run: |
+          ls -lh dist/
+
+      - name: Subir artifacts (descargables desde la corrida)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingepresupuestos-windows
+          path: |
+            dist/ingepresupuestos-windows.zip
+            dist/ingepresupuestos-setup-v*.exe
+            dist/IngePresupuestos-*.msix
+          retention-days: 3
+
+      # Si el workflow se disparó por tag (v0.5.0, v1.0.0, etc.),
+      # publica AMBOS archivos en la sección Releases del repo.
+      - name: Publicar en Releases (solo en tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/ingepresupuestos-windows.zip
+            dist/ingepresupuestos-setup-v*.exe
+          generate_release_notes: true

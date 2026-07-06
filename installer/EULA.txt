@@ -1,0 +1,178 @@
+CONTRATO DE LICENCIA DE USUARIO FINAL — IngePresupuestos
+
+ÚLTIMA ACTUALIZACIÓN: Mayo 2026
+
+POR FAVOR LEA ATENTAMENTE ESTE CONTRATO ANTES DE INSTALAR O UTILIZAR EL
+SOFTWARE. AL INSTALAR, COPIAR O USAR INGEPRESUPUESTOS USTED ACEPTA ESTAR
+OBLIGADO POR LOS TÉRMINOS DE ESTE CONTRATO. SI NO ESTÁ DE ACUERDO CON
+ESTOS TÉRMINOS, NO INSTALE NI UTILICE EL SOFTWARE.
+
+
+1. DEFINICIONES
+
+"Software" significa el programa IngePresupuestos, sus actualizaciones,
+documentación, recursos y archivos asociados.
+
+"Autor" significa Ing. Marco Sumari Tellez, único titular de los derechos
+de propiedad intelectual sobre el Software.
+
+"Usuario" significa la persona física o jurídica que instala y utiliza el
+Software bajo los términos de este contrato.
+
+"Licencia" significa la autorización de uso del Software conforme a las
+modalidades descritas en la cláusula 3.
+
+
+2. PROPIEDAD INTELECTUAL
+
+El Software es obra del Autor y está protegido por las leyes peruanas y
+los tratados internacionales sobre derechos de autor y propiedad
+intelectual. El Autor conserva todos los derechos no expresamente
+concedidos en este contrato.
+
+El código fuente, la marca, los íconos, los catálogos de datos y la
+documentación son propiedad exclusiva del Autor.
+
+
+3. MODALIDADES DE LICENCIA
+
+3.1 PERÍODO DE PRUEBA (TRIAL)
+   - Duración: 30 días corridos desde el primer arranque del Software.
+   - Permite el uso COMPLETO de todas las funcionalidades sin restricción.
+   - Es gratuito y no requiere registro ni pago.
+   - Es estrictamente personal e intransferible.
+
+3.2 LICENCIA ANUAL
+   - Vigencia: 12 meses desde la fecha de emisión.
+   - Habilita la totalidad de las funcionalidades premium del Software.
+   - Vinculada a una (1) sola máquina (computador) mediante identificador
+     de hardware. NO transferible a otra máquina sin reemisión por el Autor.
+   - Renovable anualmente.
+
+3.3 LICENCIA PERPETUA
+   - Vigencia: sin vencimiento.
+   - Habilita la totalidad de las funcionalidades premium del Software.
+   - Vinculada a una (1) sola máquina (computador) mediante identificador
+     de hardware. NO transferible a otra máquina sin reemisión por el Autor.
+   - Incluye actualizaciones gratuitas durante 2 años desde la activación.
+     Tras dicho período, el Usuario podrá seguir utilizando la versión
+     actual sin recibir actualizaciones nuevas.
+
+3.4 FUNCIONES SIEMPRE GRATUITAS
+   Independientemente del estado de la licencia, las siguientes funciones
+   permanecerán habilitadas sin restricción:
+   - Creación, edición y consulta de proyectos de presupuesto.
+   - Exportación de reportes en formato PDF.
+   - Importación desde planillas Excel y archivos PDF.
+
+
+4. RESTRICCIONES DE USO
+
+El Usuario NO podrá:
+
+(a) Copiar, distribuir, transferir, sublicenciar, alquilar o prestar el
+    Software o cualquiera de sus componentes a terceros sin autorización
+    escrita del Autor.
+
+(b) Realizar ingeniería inversa, descompilación, desensamblaje o
+    intentar derivar el código fuente del Software, excepto en la
+    medida en que la ley aplicable lo permita expresamente.
+
+(c) Modificar, adaptar, traducir o crear obras derivadas basadas en el
+    Software sin autorización escrita del Autor.
+
+(d) Eliminar, alterar u ocultar avisos de derechos de autor, marcas
+    comerciales u otros avisos de propiedad incluidos en el Software.
+
+(e) Eludir, deshabilitar o interferir con el sistema de licenciamiento
+    o los mecanismos de protección del Software.
+
+(f) Utilizar el Software para fines ilegales o no autorizados.
+
+
+5. ACTUALIZACIONES Y SOPORTE
+
+5.1 El Software puede contactar periódicamente con el servidor del Autor
+    para verificar la disponibilidad de actualizaciones. Esta comunicación
+    NO transmite información personal del Usuario.
+
+5.2 El soporte técnico se proporciona a discreción del Autor a través de
+    los canales oficiales (correo electrónico, formulario web, WhatsApp).
+
+5.3 El Autor no garantiza la disponibilidad de actualizaciones indefinidas.
+
+
+6. GARANTÍAS Y LIMITACIÓN DE RESPONSABILIDAD
+
+6.1 EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍAS DE NINGÚN TIPO,
+    EXPRESAS O IMPLÍCITAS, INCLUYENDO PERO NO LIMITÁNDOSE A GARANTÍAS DE
+    COMERCIABILIDAD, IDONEIDAD PARA UN PROPÓSITO PARTICULAR Y NO
+    INFRACCIÓN.
+
+6.2 El Autor NO garantiza que el Software funcione sin errores ni
+    interrupciones, ni que satisfaga los requisitos específicos del
+    Usuario.
+
+6.3 EN NINGÚN CASO el Autor será responsable por daños directos,
+    indirectos, incidentales, especiales, consecuentes o ejemplares
+    derivados del uso o imposibilidad de uso del Software, incluyendo
+    pero no limitándose a: pérdida de datos, lucro cesante, errores en
+    presupuestos, interrupción del negocio, o cualquier otro perjuicio.
+
+6.4 La responsabilidad total del Autor frente al Usuario por cualquier
+    causa relacionada con el Software no excederá el monto efectivamente
+    pagado por la licencia.
+
+6.5 ES RESPONSABILIDAD DEL USUARIO verificar la exactitud de los
+    cálculos y resultados generados por el Software antes de su uso
+    en obras, licitaciones o documentos oficiales. El Software es una
+    herramienta de apoyo, no un sustituto del criterio profesional.
+
+
+7. PROTECCIÓN DE DATOS PERSONALES
+
+7.1 El Software almacena los datos del Usuario (proyectos, presupuestos,
+    configuración) LOCALMENTE en su computador. NO se transmiten al Autor
+    ni a terceros sin consentimiento expreso.
+
+7.2 Para emitir una licencia, el Autor recopila: nombre, correo
+    electrónico y un identificador de hardware (hash) de la máquina del
+    comprador. Esta información se utiliza exclusivamente para vincular
+    la licencia y mantener el historial de ventas.
+
+7.3 El Autor cumple con la Ley N° 29733 de Protección de Datos Personales
+    del Perú.
+
+
+8. TERMINACIÓN
+
+8.1 Esta licencia es efectiva hasta su terminación.
+
+8.2 Se terminará automáticamente sin previo aviso si el Usuario incumple
+    cualquier término de este contrato.
+
+8.3 Al terminar, el Usuario deberá cesar todo uso del Software y eliminar
+    todas las copias en su posesión.
+
+
+9. LEY APLICABLE Y JURISDICCIÓN
+
+Este contrato se rige por las leyes de la República del Perú.
+Cualquier controversia derivada de su interpretación o ejecución se
+someterá a los tribunales competentes de Lima, Perú.
+
+
+10. CONTACTO
+
+Para consultas, soporte técnico o adquisición de licencias:
+
+  Autor:     Ing. Marco Sumari Tellez
+  Email:     ing.sumari@gmail.com
+  WhatsApp:  +51 998 839 090
+  Web:       https://ingepresupuestos.com
+
+
+Al hacer clic en "Acepto" o continuar con la instalación, usted reconoce
+haber leído y aceptado los términos de este contrato.
+
+© 2026 Ing. Marco Sumari Tellez. Todos los derechos reservados.

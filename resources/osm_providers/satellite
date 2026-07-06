@@ -1,0 +1,13 @@
+{
+    "Enabled": true,
+    "UrlTemplate": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/%z/%y/%x",
+    "ImageFormat": "jpg",
+    "QImageFormat": "RGB888",
+    "ID": "esri-world-imagery-ingep",
+    "MapCopyRight": "© Esri, Maxar, Earthstar Geographics",
+    "DataCopyRight": "© Esri, Maxar, Earthstar Geographics",
+    "MinimumZoomLevel": 0,
+    "MaximumZoomLevel": 19,
+    "Highdpi": false,
+    "TileSize": 256
+}

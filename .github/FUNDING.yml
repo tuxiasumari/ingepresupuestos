@@ -1,0 +1,6 @@
+# Botones "Sponsor" del repositorio en GitHub.
+# - github: agrega tu usuario cuando actives GitHub Sponsors.
+# - custom: enlaces propios de apoyo (Yape / donación).
+github: []
+custom:
+  - "https://ingepresupuestos.com/apoyar"

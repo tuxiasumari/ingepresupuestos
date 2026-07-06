@@ -1,0 +1,74 @@
+app-id: com.ingepresupuestos.IngePresupuestos
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: ingepresupuestos
+
+finish-args:
+  # Interfaz gráfica — Wayland nativo cuando existe, X11 como fallback (X.org).
+  # NO forzar xcb: en Wayland el sandbox no recibe DISPLAY y xcb no conectaría.
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri                            # OpenGL: mapas (QtLocation) y Qt Quick
+  # Red — tiles del mapa OSM, asistentes IA (Anthropic/Groq/…)
+  - --share=network
+  # Archivos del usuario — abrir/guardar .db, importar .prs/.xlsx, exportar reportes
+  - --filesystem=home
+  # Puente al host — LibreOffice (reportes ODT/ODS) y mdbtools (importar .prs)
+  # viven en el sistema, no dentro del sandbox
+  - --talk-name=org.freedesktop.Flatpak
+
+modules:
+  # Qt6 (que trae PySide6) enlaza libQt6Network contra GSSAPI/Kerberos; el
+  # runtime Freedesktop no incluye libgssapi_krb5.so.2, así que sin esto fallan
+  # QtNetwork, QtPdf (visor de reportes), QtQuick y QtLocation (mapa).
+  - name: krb5
+    subdir: src
+    build-options:
+      # El SDK usa GCC con C23 por defecto, donde `f()` = cero args; el código
+      # K&R legado de krb5 (util/ss) rompe. gnu17 restaura la semántica antigua.
+      cflags: -std=gnu17 -Wno-implicit-function-declaration -Wno-implicit-int -Wno-int-conversion -Wno-incompatible-pointer-types
+    config-opts:
+      - --disable-static
+      - --without-ldap
+      - --without-tcl
+      - --without-libedit
+      - --without-readline
+      - --disable-rpath
+    cleanup:
+      - /bin
+      - /sbin
+      - /share
+      - /include
+      - /etc
+      - '*.la'
+    sources:
+      - type: archive
+        url: https://kerberos.org/dist/krb5/1.21/krb5-1.21.3.tar.gz
+        sha256: b7a4cd5ead67fb08b980b21abd150ff7217e85ea320c9ed0c6dadd304840ad35
+
+  - name: ingepresupuestos
+    buildsystem: simple
+    build-options:
+      # Red durante el BUILD para que pip descargue las ruedas (solo build local;
+      # para Flathub se reemplaza por un módulo pip offline con hashes fijos).
+      build-args:
+        - --share=network
+    build-commands:
+      # 1. Dependencias Python. PySide6 trae su propio Qt; excluimos pyinstaller
+      #    (empaquetado) y pyodbc (solo Windows — en Linux usamos mdbtools).
+      - grep -vE '^\s*(pyinstaller|pyodbc)\b' requirements.txt > reqs.txt
+      - pip3 install --prefix=${FLATPAK_DEST} --no-warn-script-location -r reqs.txt
+      # 2. Código y datos de la app
+      - mkdir -p ${FLATPAK_DEST}/ingepresupuestos
+      - cp -a core models utils views widgets worker resources main.py presupuestos_seed.db ${FLATPAK_DEST}/ingepresupuestos/
+      # 3. Lanzador
+      - install -Dm755 installer/flatpak/flatpak-launcher.sh ${FLATPAK_DEST}/bin/ingepresupuestos
+      # 4. Integración de escritorio
+      - install -Dm644 installer/flatpak/${FLATPAK_ID}.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 resources/icons/elementary/24/ingepresupuestos.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png
+      - install -Dm644 installer/flatpak/${FLATPAK_ID}.metainfo.xml ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
+    sources:
+      - type: dir
+        path: .staging/src

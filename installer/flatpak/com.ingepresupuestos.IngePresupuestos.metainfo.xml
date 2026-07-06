@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ingepresupuestos.IngePresupuestos</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>IngePresupuestos</name>
+  <summary>Presupuestos de obra, ACU y cronogramas para ingeniería civil</summary>
+  <summary xml:lang="en">Construction budgeting, unit-cost analysis and schedules</summary>
+
+  <description>
+    <p>
+      IngePresupuestos es una aplicación de escritorio nativa para elaborar
+      presupuestos de obra: análisis de costos unitarios (ACU), cronogramas
+      tipo MS Project (Gantt + ruta crítica), fórmula polinómica, curva S y
+      control de obra. Importa proyectos de S10, PowerCost y Delphin.
+    </p>
+    <p xml:lang="en">
+      A native desktop app for construction cost estimating: unit-cost
+      analysis, MS-Project-style schedules (Gantt + critical path),
+      polynomial formula, S-curve and site control. Imports S10, PowerCost
+      and Delphin projects.
+    </p>
+    <p>Genera reportes profesionales en PDF, Excel, Word, ODS y ODT.</p>
+  </description>
+
+  <launchable type="desktop-id">com.ingepresupuestos.IngePresupuestos.desktop</launchable>
+
+  <categories>
+    <category>Office</category>
+    <category>Finance</category>
+    <category>Engineering</category>
+  </categories>
+
+  <url type="homepage">https://ingepresupuestos.com</url>
+  <url type="help">https://docs.ingepresupuestos.com</url>
+
+  <developer id="com.ingepresupuestos">
+    <name>Ing. Marco Sumari</name>
+  </developer>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="2.6.2" date="2026-07-01">
+      <description>
+        <p>Módulo de Control de Obra, «Sugerir partidas» con IA y plantillas de estructura.</p>
+      </description>
+    </release>
+  </releases>
+</component>
