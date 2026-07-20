@@ -8,7 +8,7 @@
 #     siguen funcionando. La importación .prs se conserva empaquetando mdbtools.
 #   · Dependencias Python OFFLINE con hashes (python3-requirements.yaml), SIN PySide6
 #     (lo aporta el base-app io.qt.PySide.BaseApp).
-#   · Fuente desde el tag público v2.8.2 (archive + sha256), no una carpeta local.
+#   · Fuente desde el tag público v2.8.4 (archive + sha256), no una carpeta local.
 app-id: com.ingepresupuestos.IngePresupuestos
 runtime: org.kde.Platform
 runtime-version: '6.10'
@@ -53,7 +53,7 @@ modules:
   # Dependencias Python congeladas (offline, con sha256), SIN PySide6.
   - python3-requirements.yaml
 
-  # La aplicación (código + datos), desde el tag público v2.8.2.
+  # La aplicación (código + datos), desde el tag público v2.8.4.
   - name: ingepresupuestos
     buildsystem: simple
     build-commands:
@@ -65,8 +65,8 @@ modules:
       - install -Dm644 ${FLATPAK_ID}.metainfo.xml ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
     sources:
       - type: archive
-        url: https://github.com/ingelibre/ingepresupuestos/archive/refs/tags/v2.8.2.tar.gz
-        sha256: 5902e8c04810b32b6bbb52ac1ed60d9d83b48e25d20bd6cf5c2fccdef8f2f65e
+        url: https://github.com/ingelibre/ingepresupuestos/archive/refs/tags/v2.8.4.tar.gz
+        sha256: 505c3d1d2c2df0e2b58ccf2f17cf7fd298881a16fd87c6f087931b4e1f0cd313
       - type: file
         path: flathub-launcher.sh
       - type: file
