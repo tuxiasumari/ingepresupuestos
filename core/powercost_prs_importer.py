@@ -105,13 +105,22 @@ def _verificar_backend() -> None:
 
 
 def _en_flatpak_host(cmd: list[str]) -> list[str]:
-    """Prefija el comando con ``flatpak-spawn --host`` cuando corremos dentro
-    de un sandbox Flatpak (mdbtools vive en el host, no en el sandbox).
+    """Enruta un comando de mdbtools. Prefiere el binario LOCAL: el embebido en
+    la edición Flathub (``/app/bin/mdb-export``) o el del sistema en instalación
+    nativa. Solo si NO hay mdb-export local y corremos en un Flatpak con acceso
+    al host (edición sideload, con ``--talk-name=org.freedesktop.Flatpak``) lo
+    enruta con ``flatpak-spawn --host`` (allí mdbtools vive en el host).
+
+    Distinguir por la presencia del binario local es clave: en Flathub
+    ``flatpak-spawn --host`` está BLOQUEADO, así que enrutar al host rompería la
+    importación .prs pese al mdbtools embebido.
 
     Se fija ``--directory`` al home del usuario porque flatpak-spawn hereda el
     cwd del proceso (bajo Flatpak = ``/app/…``, inexistente en el host)."""
     import os
     from core.config import es_flatpak
+    if shutil.which('mdb-export'):
+        return cmd                       # binario local (embebido o nativo)
     if es_flatpak():
         # flatpak-spawn exige --directory=DIR (con «=», no separado).
         host_dir = os.environ.get('HOME') or '/'
@@ -120,7 +129,10 @@ def _en_flatpak_host(cmd: list[str]) -> list[str]:
 
 
 def _mdb_disponible() -> bool:
-    """True si mdb-export está disponible (en el host bajo Flatpak)."""
+    """True si mdb-export está disponible: primero el local (embebido en la
+    edición Flathub o del sistema); si no, el del host (Flatpak sideload)."""
+    if shutil.which('mdb-export'):
+        return True
     from core.config import es_flatpak
     if es_flatpak():
         try:
@@ -131,7 +143,7 @@ def _mdb_disponible() -> bool:
             return r.returncode == 0 and bool(r.stdout.strip())
         except Exception:
             return False
-    return shutil.which('mdb-export') is not None
+    return False
 
 
 def _query_mdbtools(filepath: str, table: str) -> list[dict]:
