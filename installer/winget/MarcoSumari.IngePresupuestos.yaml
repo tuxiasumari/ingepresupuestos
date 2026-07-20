@@ -1,8 +1,8 @@
 # Manifiesto de VERSIÓN — winget (schema 1.6.0)
 # Destino en el PR a github.com/microsoft/winget-pkgs:
-#   manifests/m/MarcoSumari/IngePresupuestos/2.8.0/
+#   manifests/m/MarcoSumari/IngePresupuestos/2.8.2/
 PackageIdentifier: MarcoSumari.IngePresupuestos
-PackageVersion: 2.8.0
+PackageVersion: 2.8.2
 DefaultLocale: es-PE
 ManifestType: version
 ManifestVersion: 1.6.0

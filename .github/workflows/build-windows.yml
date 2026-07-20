@@ -164,6 +164,7 @@ jobs:
           files: |
             dist/ingepresupuestos-windows.zip
             dist/ingepresupuestos-setup-v*.exe
+            dist/IngePresupuestos-*.msix
           generate_release_notes: true
 
       # ── Subir a Cloudflare R2 (opcional: requiere los secretos R2_*) ───────
@@ -183,4 +184,6 @@ jobs:
           EP="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           aws s3 cp "dist/ingepresupuestos-setup-v${V}.exe" "s3://ingepresupuestos-downloads/v${V}/" --endpoint-url "$EP"
           aws s3 cp "dist/ingepresupuestos-windows.zip" "s3://ingepresupuestos-downloads/v${V}/" --endpoint-url "$EP"
+          # .msix (Microsoft Store, sin firmar) — durable para enviarlo a Partner Center.
+          aws s3 cp "dist/IngePresupuestos-${V}.msix" "s3://ingepresupuestos-downloads/v${V}/" --endpoint-url "$EP"
           echo "✓ binarios Windows subidos a R2/v${V}/"
