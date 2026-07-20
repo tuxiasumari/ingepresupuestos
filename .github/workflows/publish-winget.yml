@@ -1,0 +1,33 @@
+# Publica automáticamente cada nueva versión en winget (microsoft/winget-pkgs).
+#
+# Al publicarse un Release (tag vX.Y.Z), winget-releaser toma el instalador
+# .exe adjunto al Release, actualiza el manifiesto de MarcoSumari.IngePresupuestos
+# (versión + InstallerUrl + InstallerSha256) y abre el PR a microsoft/winget-pkgs.
+#
+# REQUISITO (una sola vez): agregar el secret WINGET_TOKEN en
+#   Settings → Secrets and variables → Actions
+# Debe ser un Personal Access Token CLÁSICO con scope `public_repo` de una cuenta
+# que tenga (o pueda crear) un fork de microsoft/winget-pkgs. Sin ese secret el
+# job se salta (no rompe el release).
+#
+# Nota: solo funciona a partir de la 2ª versión (la 1ª — 2.8.4 — se envió a mano
+# como paquete nuevo; winget-releaser hace "update" sobre un paquete ya existente).
+name: Publicar en winget
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  winget:
+    runs-on: ubuntu-latest
+    # Solo si el token está configurado (evita fallos en forks/sin secret).
+    if: ${{ github.repository == 'ingelibre/ingepresupuestos' }}
+    steps:
+      - name: Actualizar manifiesto y abrir PR en winget-pkgs
+        uses: winget-releaser/winget-releaser@v2
+        with:
+          identifier: MarcoSumari.IngePresupuestos
+          # El instalador .exe adjunto al Release (Inno Setup).
+          installers-regex: 'ingepresupuestos-setup-v.*\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
