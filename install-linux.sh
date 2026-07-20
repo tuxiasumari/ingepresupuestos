@@ -18,6 +18,10 @@ APP_DIR="${PREFIX}/share/ingepresupuestos-bin"
 DESKTOP_FILE="${PREFIX}/share/applications/ingepresupuestos.desktop"
 ICON_DIR="${PREFIX}/share/icons/hicolor/256x256/apps"
 ICON_FILE="${ICON_DIR}/ingepresupuestos.png"
+# Asociación de archivos .db → icono de documento branded.
+HICOLOR_DIR="${PREFIX}/share/icons/hicolor"
+MIME_DIR="${PREFIX}/share/mime"
+MIME_PKG="${MIME_DIR}/packages/ingepresupuestos.xml"
 
 # Colores
 G='\033[0;32m'; R='\033[0;31m'; Y='\033[0;33m'; N='\033[0m'
@@ -28,6 +32,10 @@ if [ "$1" = "--uninstall" ]; then
     rm -rf "$APP_DIR"
     rm -f "$DESKTOP_FILE"
     rm -f "$ICON_FILE"
+    # Quitar la asociación de archivos .db (icono de documento + tipo MIME).
+    find "$HICOLOR_DIR" -name "application-x-ingepresupuestos-db.*" -delete 2>/dev/null || true
+    rm -f "$MIME_PKG"
+    update-mime-database "$MIME_DIR" 2>/dev/null || true
     update-desktop-database "${PREFIX}/share/applications" 2>/dev/null || true
     gtk-update-icon-cache "${PREFIX}/share/icons/hicolor" 2>/dev/null || true
     echo -e "${G}✓ Desinstalado${N}"
@@ -68,6 +76,22 @@ echo -e "${G}→ Copiando ícono…${N}"
 mkdir -p "$ICON_DIR"
 cp "$ICON_SRC" "$ICON_FILE"
 
+# ── Asociar el icono de documento a los archivos .db ──────────────────────
+# Registra un tipo MIME propio (application/x-ingepresupuestos-db) que reclama
+# *.db e instala el icono branded en el tema hicolor. Cosmético: da
+# "personalidad" a los .db en el explorador; no cambia con qué se abren.
+MIME_SRC="${HERE}/_internal/resources/mime/ingepresupuestos.xml"
+HICOLOR_SRC="${HERE}/_internal/resources/icons/hicolor"
+if [ -f "$MIME_SRC" ] && [ -d "$HICOLOR_SRC" ]; then
+    echo -e "${G}→ Asociando el icono de documento a los archivos .db…${N}"
+    cp -r "${HICOLOR_SRC}/." "$HICOLOR_DIR/"
+    mkdir -p "$(dirname "$MIME_PKG")"
+    cp "$MIME_SRC" "$MIME_PKG"
+    update-mime-database "$MIME_DIR" 2>/dev/null || true
+else
+    echo -e "${Y}  (aviso: no se encontraron los recursos del icono .db; se omite)${N}"
+fi
+
 # ── Crear .desktop ────────────────────────────────────────────────────────
 echo -e "${G}→ Creando lanzador (.desktop)…${N}"
 mkdir -p "$(dirname "$DESKTOP_FILE")"
@@ -83,12 +107,14 @@ Terminal=false
 Categories=Office;Finance;
 StartupWMClass=ingepresupuestos
 Keywords=presupuesto;obra;ACU;CAPECO;construccion;
+MimeType=application/x-ingepresupuestos-db;
 EOF
 chmod +x "$DESKTOP_FILE"
 
 # ── Refrescar caches ──────────────────────────────────────────────────────
+update-mime-database "$MIME_DIR" 2>/dev/null || true
 update-desktop-database "${PREFIX}/share/applications" 2>/dev/null || true
-gtk-update-icon-cache "${PREFIX}/share/icons/hicolor" 2>/dev/null || true
+gtk-update-icon-cache -f "${PREFIX}/share/icons/hicolor" 2>/dev/null || true
 
 echo
 echo -e "${G}✓ Instalación completa${N}"

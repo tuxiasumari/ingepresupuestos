@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Icono de documento para los archivos de base de datos de IngePresupuestos
+  (.db). Hoja blanca con esquina doblada + filas de tabla y el badge naranja
+  del producto (Σ) en la esquina inferior derecha, al estilo de los iconos
+  de documento de Office. Fuente vectorial de la que se derivan el .ico de
+  Windows y los PNG del tema hicolor de Linux.
+
+  Sin filtros SVG (feDropShadow): las sombras son formas sólidas para que el
+  render headless (Inkscape / ImageMagick) sea idéntico en todas las máquinas.
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Copyright (C) 2026 Marco Sumari / Sumari SAC
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffc27d"/>
+      <stop offset="1" stop-color="#f37329"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eceded"/>
+      <stop offset="1" stop-color="#c9cbce"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sombra suave de la hoja -->
+  <path d="M62 30 H158 L202 74 V236 H62 Z" fill="#20242b" fill-opacity="0.14"/>
+
+  <!-- Hoja con esquina doblada (dog-ear arriba a la derecha) -->
+  <path d="M60 24 H156 L200 68 V232 H60 Z"
+        fill="#ffffff" stroke="#d3d5d9" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M156 24 L200 68 H156 Z" fill="url(#fold)" stroke="#c2c4c8"
+        stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- Filas de tabla (motivo del logo) -->
+  <g fill="#d5d7db">
+    <rect x="78"  y="92"  width="98" height="11" rx="5.5"/>
+    <rect x="78"  y="114" width="42" height="11" rx="5.5"/>
+    <rect x="130" y="114" width="46" height="11" rx="5.5"/>
+    <rect x="78"  y="136" width="98" height="11" rx="5.5"/>
+    <rect x="78"  y="158" width="42" height="11" rx="5.5"/>
+  </g>
+
+  <!-- Badge del producto en la esquina inferior derecha -->
+  <rect x="138" y="156" width="82" height="82" rx="18" fill="#8a3200" fill-opacity="0.30"/>
+  <rect x="134" y="150" width="82" height="82" rx="18" fill="url(#badge)"/>
+  <text x="175" y="210" text-anchor="middle"
+        font-family="DejaVu Sans, Arial, sans-serif" font-weight="bold"
+        font-size="62" fill="#ffffff">&#931;</text>
+</svg>

@@ -80,6 +80,10 @@ RestartApplications=no
 ; Mínimo Windows 10. El bundle PyInstaller no anda en 8 ni 7.
 MinVersion=10.0
 
+; Asociación de archivos .db (icono de documento branded, ver [Registry]).
+; Hace que el instalador notifique al shell para refrescar los iconos.
+ChangesAssociations=yes
+
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
@@ -94,6 +98,9 @@ Name: "quicklaunchicon"; Description: "Crear acceso directo en la barra de inici
 ; Copiar TODO el output de PyInstaller a la carpeta de instalación.
 ; "recursesubdirs" mantiene la estructura interna (_internal/, resources/, etc.)
 Source: "..\dist\ingepresupuestos\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Icono de documento para los archivos .db (ver [Registry]). Se copia a la
+; raíz de {app} para que DefaultIcon lo referencie con una ruta estable.
+Source: "..\resources\icons\mimetypes\ingepresupuestos-db.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 
 [Icons]
@@ -104,6 +111,26 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 ; Escritorio (opcional, según tasks)
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
+
+
+[Registry]
+; ── Asociación de archivos .db → icono de documento branded ────────────────
+; Da "personalidad" a las bases de datos de IngePresupuestos (estilo Word):
+; hoja + logo naranja en la esquina. Es cosmético — el doble clic solo lanza
+; la app (que ignora el argumento), no realiza ninguna acción sobre el .db.
+;
+; Root HKA = HKLM cuando el instalador corre como admin (asociación para toda
+; la máquina). OJO: al "adueñarse" de .db, TODA base SQLite del sistema tomará
+; este icono; es el comportamiento elegido a propósito.
+;
+; ProgID propio:
+Root: HKA; Subkey: "Software\Classes\IngePresupuestos.db"; ValueType: string; ValueName: ""; ValueData: "Base de datos de IngePresupuestos"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\IngePresupuestos.db\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\ingepresupuestos-db.ico,0"
+Root: HKA; Subkey: "Software\Classes\IngePresupuestos.db\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+; Asociar la extensión .db a ese ProgID. `uninsdeletevalue` quita nuestro
+; valor al desinstalar (no restaura el handler previo, si lo hubiera):
+Root: HKA; Subkey: "Software\Classes\.db"; ValueType: string; ValueName: ""; ValueData: "IngePresupuestos.db"; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.db\OpenWithProgids"; ValueType: string; ValueName: "IngePresupuestos.db"; ValueData: ""; Flags: uninsdeletevalue
 
 
 [Run]

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Tipo MIME propio para las bases de datos de IngePresupuestos (.db).
+
+  Reclama la extensión *.db con weight="60" para ganarle a la detección
+  por contenido de SQLite (application/vnd.sqlite3, prioridad 50), de modo
+  que los .db muestren el icono branded en el explorador de archivos.
+  Se declara sub-class-of vnd.sqlite3 para conservar la semántica (siguen
+  siendo bases SQLite abribles por otras herramientas).
+
+  Lo instala install-linux.sh en ~/.local/share/mime/packages/ y luego
+  ejecuta update-mime-database.
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Copyright (C) 2026 Marco Sumari / Sumari SAC
+-->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-ingepresupuestos-db">
+    <comment>Base de datos de IngePresupuestos</comment>
+    <comment xml:lang="en">IngePresupuestos database</comment>
+    <sub-class-of type="application/vnd.sqlite3"/>
+    <icon name="application-x-ingepresupuestos-db"/>
+    <glob pattern="*.db" weight="60"/>
+  </mime-type>
+</mime-info>

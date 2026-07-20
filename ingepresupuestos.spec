@@ -50,6 +50,14 @@ datas = [
     # sin API key). Reemplaza el servicio hospedado de Qt, ya descontinuado.
     ('resources/osm_providers/street',       'resources/osm_providers'),
     ('resources/osm_providers/satellite',    'resources/osm_providers'),
+    # Asociación de archivos .db → icono de documento branded.
+    #   - .ico para el instalador de Windows (Inno Setup).
+    #   - PNGs del tema hicolor + XML del MIME para la instalación en Linux
+    #     (los consume install-linux.sh desde _internal/resources/…).
+    ('resources/icons/mimetypes/ingepresupuestos-db.ico', 'resources/icons/mimetypes'),
+    ('resources/icons/mimetypes/ingepresupuestos-db.svg', 'resources/icons/mimetypes'),
+    ('resources/icons/hicolor', 'resources/icons'),
+    ('resources/mime/*.xml',    'resources/mime'),
 ]
 
 # ── Hidden imports ───────────────────────────────────────────────────────────
