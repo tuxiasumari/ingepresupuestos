@@ -1606,6 +1606,10 @@ class ProyectoView(QWidget):
         self._recalcular_estado_flags()
         self._sub_ppto_id: int | None = None
         self._partida_actual_id: int | None = None
+        # Partida cuyas filas están cargadas en el panel Metrados/Acero. Puede
+        # diferir de _partida_actual_id: el panel solo se recarga con el tab
+        # Metrados visible, así que los guardados deben escribir a esta partida.
+        self._met_panel_pid: int | None = None
         self._acu_clipboard: list[dict] = []   # items copiados {recurso_id, cuadrilla, cantidad, precio}
         self._acu_loading = False
         self._met_loading = False
@@ -5921,6 +5925,7 @@ class ProyectoView(QWidget):
             conn.close()
 
     def cargar_metrados(self, part_id: int):
+        self._met_panel_pid = part_id
         self._met_loading = True
         conn = get_db()
         rows = conn.execute(
@@ -6290,10 +6295,10 @@ class ProyectoView(QWidget):
         # Guardar planilla y specs antes de cambiar de partida
         if self._spec_modificada and self._partida_actual_id:
             self._guardar_spec()
-        if self._met_modo == 'met' and self._partida_actual_id:
+        if self._met_modo == 'met' and self._met_panel_pid:
             from PySide6.QtCore import QModelIndex as _QMI
             self.tbl_met.setCurrentIndex(_QMI())   # cierra editor → guarda via itemChanged
-        elif self._met_modo == 'acero' and self._partida_actual_id:
+        elif self._met_modo == 'acero' and self._met_panel_pid:
             self._acero_guardar_silencioso()
         if not current:
             return
@@ -6929,10 +6934,11 @@ class ProyectoView(QWidget):
         self.tree.blockSignals(True)
         item.setText(3, f"{met:,.3f}")
         item.setText(5, fmt(_r2(met * pu), self._moneda))
-        # Si tenía planilla, borrarla y quitar el indicador ✓
+        # Si tenía planilla (normal o de acero), borrarla y quitar el indicador ✓
         if part_id in getattr(self, '_con_planilla', set()):
             conn2 = get_db()
             conn2.execute("DELETE FROM metrados_detalle WHERE partida_id=?", (part_id,))
+            conn2.execute("DELETE FROM acero_detalle WHERE partida_id=?", (part_id,))
             conn2.commit()
             conn2.close()
             self._con_planilla.discard(part_id)
@@ -6940,19 +6946,24 @@ class ProyectoView(QWidget):
             item.setData(3, Qt.UserRole, False)
             item.setToolTip(3, "")
         # Si la planilla de metrados (panel derecho) está mostrando ESTA partida,
-        # limpiar su tabla en memoria. El metrado manual descarta la planilla; de
-        # no limpiarla, `tbl_met` conserva las filas viejas y el guardado
-        # silencioso reescribiría el detalle y recalcularía el metrado desde la
-        # planilla → sobrescribe el valor manual "después de un tiempo". Con la
-        # tabla vacía, el guard `_met_tiene_datos()` evita el re-guardado.
-        if getattr(self, '_partida_actual_id', None) == part_id \
-                and hasattr(self, 'tbl_met'):
-            self._met_loading = True
-            self.tbl_met.setRowCount(0)
+        # limpiar sus tablas en memoria. El metrado manual descarta la planilla;
+        # de no limpiarlas, `tbl_met`/`tbl_acero` conservan las filas viejas y el
+        # guardado silencioso reescribiría el detalle y recalcularía el metrado
+        # desde la planilla → sobrescribe el valor manual "después de un tiempo".
+        # Con las tablas vacías, los guards `_met_tiene_datos()` /
+        # `_acero_tiene_datos()` evitan el re-guardado.
+        if getattr(self, '_met_panel_pid', None) == part_id:
+            if hasattr(self, 'tbl_met'):
+                self._met_loading = True
+                self.tbl_met.setRowCount(0)
+                self._met_loading = False
+                self._met_dirty = False
+            if hasattr(self, 'tbl_acero'):
+                self._acero_loading = True
+                self.tbl_acero.setRowCount(0)
+                self._acero_loading = False
             if hasattr(self, 'lbl_met_total'):
                 self.lbl_met_total.setText(f"{0:,.{get_decimales_metrado()}f}")
-            self._met_loading = False
-            self._met_dirty = False
             self._metrado_nueva_fila()
         self.tree.blockSignals(False)
         self.actualizar_total()
@@ -7820,7 +7831,10 @@ class ProyectoView(QWidget):
 
     def _acero_guardar_silencioso(self):
         """Guarda acero en DB y actualiza árbol sin recargar todo."""
-        if self._partida_actual_id is None:
+        # Escribir a la partida cargada en el panel, NO a la seleccionada en el
+        # árbol: pueden diferir si se cambió de partida fuera del tab Metrados.
+        pid = self._met_panel_pid
+        if pid is None:
             return
         if not self._ed_presupuesto:
             return
@@ -7831,8 +7845,8 @@ class ProyectoView(QWidget):
         dec  = get_decimales_metrado()
         conn = get_db()
         # Exclusividad mutua: borrar metrados normales solo cuando hay datos reales de acero
-        conn.execute("DELETE FROM metrados_detalle WHERE partida_id=?", (self._partida_actual_id,))
-        conn.execute("DELETE FROM acero_detalle WHERE partida_id=?",    (self._partida_actual_id,))
+        conn.execute("DELETE FROM metrados_detalle WHERE partida_id=?", (pid,))
+        conn.execute("DELETE FROM acero_detalle WHERE partida_id=?",    (pid,))
         total_kg = 0.0
         orden = 0
         for r in range(tbl.rowCount()):
@@ -7861,18 +7875,18 @@ class ProyectoView(QWidget):
                    (partida_id, orden, descripcion, diametro,
                     n_estructuras, n_elementos, n_veces, longitud, kg_ml, parcial)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (self._partida_actual_id, orden, desc, diametro,
+                (pid, orden, desc, diametro,
                  n_est, n_el, n_var, llong, kgml, parc_kg)
             )
         total_kg = round(total_kg, dec)
         conn.execute("UPDATE partidas SET metrado=? WHERE id=?",
-                     (total_kg, self._partida_actual_id))
+                     (total_kg, pid))
         conn.commit()
         conn.close()
         # Actualizar árbol sin recargar todo
         self.tree.blockSignals(True)
-        self._con_planilla.add(self._partida_actual_id)
-        tw = self._id_to_item.get(self._partida_actual_id)
+        self._con_planilla.add(pid)
+        tw = self._id_to_item.get(pid)
         if tw:
             tw.setText(3, f"{total_kg:,.{dec}f}")
             tw.setData(3, Qt.UserRole, True)
@@ -7928,7 +7942,7 @@ class ProyectoView(QWidget):
         self._acero_guardar_silencioso()
 
     def _acero_pegar(self):
-        if not _ACERO_CLIPBOARD or self._partida_actual_id is None:
+        if not _ACERO_CLIPBOARD or self._met_panel_pid is None:
             return
         insert_at = max(0, self.tbl_acero.rowCount() - 1)
         self._acero_loading = True
@@ -8091,6 +8105,7 @@ class ProyectoView(QWidget):
             self._acero_recalc_fila(r)
 
     def cargar_acero(self, part_id: int):
+        self._met_panel_pid = part_id
         self._acero_loading = True
         conn = get_db()
         rows = conn.execute(
@@ -8226,7 +8241,8 @@ class ProyectoView(QWidget):
         self.lbl_met_total.setText(f"{total:,.{dec}f}")
 
     def _acero_guardar_impl(self):
-        if self._partida_actual_id is None:
+        pid = self._met_panel_pid
+        if pid is None:
             return
         if not self._ed_presupuesto:
             return
@@ -8234,9 +8250,9 @@ class ProyectoView(QWidget):
         conn = get_db()
         # Exclusividad mutua: borrar metrados normales si se guardan metrados de acero
         conn.execute("DELETE FROM metrados_detalle WHERE partida_id=?",
-                     (self._partida_actual_id,))
+                     (pid,))
         conn.execute("DELETE FROM acero_detalle WHERE partida_id=?",
-                     (self._partida_actual_id,))
+                     (pid,))
         total_kg = 0.0
         orden = 0
         for r in range(tbl.rowCount()):
@@ -8268,13 +8284,13 @@ class ProyectoView(QWidget):
                    (partida_id, orden, descripcion, diametro,
                     n_estructuras, n_elementos, n_veces, longitud, kg_ml, parcial)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (self._partida_actual_id, orden, desc, diametro,
+                (pid, orden, desc, diametro,
                  n_est, n_el, n_var, llong, kgml, parc_kg)
             )
 
         total_kg = round(total_kg, 4)
         conn.execute("UPDATE partidas SET metrado=? WHERE id=?",
-                     (total_kg, self._partida_actual_id))
+                     (total_kg, pid))
         conn.commit()
         conn.close()
         self.lbl_met_total.setText(f"{total_kg:.3f}")
@@ -8330,7 +8346,7 @@ class ProyectoView(QWidget):
     def _met_pegar(self):
         if not self._ed_presupuesto:
             return
-        if not _MET_CLIPBOARD or self._partida_actual_id is None:
+        if not _MET_CLIPBOARD or self._met_panel_pid is None:
             return
         dec = get_decimales_metrado()
         # Insertar antes de la última fila vacía
@@ -8414,7 +8430,7 @@ class ProyectoView(QWidget):
                        for c in range(7))
 
     def _metrado_nueva_fila(self):
-        if self._partida_actual_id is None:
+        if self._met_panel_pid is None:
             return
         if self._met_modo == 'acero':
             if not self._acero_ultima_vacia():
@@ -8515,17 +8531,18 @@ class ProyectoView(QWidget):
         self._metrado_guardar_silencioso()
 
     def _metrado_guardar(self):
-        if self._partida_actual_id is None:
+        pid = self._met_panel_pid
+        if pid is None:
             return
         if not self._ed_presupuesto:
             return
         if self._met_modo == 'acero':
             self._acero_guardar_impl()
-            self.cargar_acero(self._partida_actual_id)   # compacta blancos intercalados
+            self.cargar_acero(pid)   # compacta blancos intercalados
             return
         conn = get_db()
         conn.execute("DELETE FROM metrados_detalle WHERE partida_id=?",
-                     (self._partida_actual_id,))
+                     (pid,))
         total = 0.0
         for r in range(self.tbl_met.rowCount()):
             def _val(c):
@@ -8556,7 +8573,7 @@ class ProyectoView(QWidget):
                    (partida_id, orden, descripcion, n_estructuras, n_elementos,
                     area, largo, ancho, alto, parcial)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (self._partida_actual_id, r+1, desc, n_est, n_el, area, largo, ancho, alto, parcial)
+                (pid, r+1, desc, n_est, n_el, area, largo, ancho, alto, parcial)
             )
             it_parc = self.tbl_met.item(r, 7)
             if it_parc:
@@ -8565,7 +8582,7 @@ class ProyectoView(QWidget):
         dec   = get_decimales_metrado()
         total = _rn(total, dec)
         conn.execute("UPDATE partidas SET metrado=? WHERE id=?",
-                     (total, self._partida_actual_id))
+                     (total, pid))
         conn.commit()
         conn.close()
         self.lbl_met_total.setText(f"{total:,.{dec}f}")
@@ -8585,7 +8602,10 @@ class ProyectoView(QWidget):
 
     def _metrado_guardar_silencioso(self):
         """Guarda metrados en DB y actualiza el árbol sin recargar todo."""
-        if self._partida_actual_id is None:
+        # Escribir a la partida cargada en el panel, NO a la seleccionada en el
+        # árbol: pueden diferir si se cambió de partida fuera del tab Metrados.
+        pid = self._met_panel_pid
+        if pid is None:
             return
         if not self._ed_presupuesto:
             return
@@ -8596,9 +8616,9 @@ class ProyectoView(QWidget):
         conn = get_db()
         # Exclusividad mutua: borrar acero solo cuando hay datos reales de metrados
         conn.execute("DELETE FROM acero_detalle WHERE partida_id=?",
-                     (self._partida_actual_id,))
+                     (pid,))
         conn.execute("DELETE FROM metrados_detalle WHERE partida_id=?",
-                     (self._partida_actual_id,))
+                     (pid,))
         total = 0.0
         for r in range(self.tbl_met.rowCount()):
             def _v(c, _r=r):
@@ -8622,26 +8642,26 @@ class ProyectoView(QWidget):
                    (partida_id, orden, descripcion, n_estructuras, n_elementos,
                     area, largo, ancho, alto, parcial)
                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (self._partida_actual_id, r+1, desc, n_est, n_el, area, largo, ancho, alto, parcial)
+                (pid, r+1, desc, n_est, n_el, area, largo, ancho, alto, parcial)
             )
         total = _rn(total, dec)
         conn.execute("UPDATE partidas SET metrado=? WHERE id=?",
-                     (total, self._partida_actual_id))
+                     (total, pid))
         conn.commit()
         # Verificar que los datos quedaron guardados
         check = conn.execute("SELECT COUNT(*) FROM metrados_detalle WHERE partida_id=?",
-                             (self._partida_actual_id,)).fetchone()[0]
+                             (pid,)).fetchone()[0]
         conn.close()
         # Segunda verificación con nueva conexión
         conn2 = get_db()
         check2 = conn2.execute("SELECT COUNT(*) FROM metrados_detalle WHERE partida_id=?",
-                               (self._partida_actual_id,)).fetchone()[0]
+                               (pid,)).fetchone()[0]
         conn2.close()
 
         # Actualizar árbol — bloquear señales para no disparar _on_tree_metrado_cambiado
         self.tree.blockSignals(True)
-        self._con_planilla.add(self._partida_actual_id)
-        tw = self._id_to_item.get(self._partida_actual_id)
+        self._con_planilla.add(pid)
+        tw = self._id_to_item.get(pid)
         if tw:
             tw.setText(3, f"{total:,.{dec}f}")
             tw.setData(3, Qt.UserRole, True)   # ✓ planilla
