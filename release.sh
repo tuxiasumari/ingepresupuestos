@@ -103,8 +103,8 @@ echo
 echo -e "${G}✓ Tag ${TAG} pusheado${N}"
 echo
 echo "Siguiente paso (esperar ~10 min):"
-echo "  1. Abre https://github.com/tuxiasumari/ingepresupuestos-pyside6/actions"
+echo "  1. Abre https://github.com/ingelibre/ingepresupuestos/actions"
 echo "  2. Verás dos workflows corriendo: 'Build Linux' y 'Build Windows'"
 echo "  3. Cuando ambos terminen, los binarios aparecen en:"
-echo "     https://github.com/tuxiasumari/ingepresupuestos-pyside6/releases/tag/${TAG}"
+echo "     https://github.com/ingelibre/ingepresupuestos/releases/tag/${TAG}"
 echo "  4. Descarga ingepresupuestos-windows.zip y pásaselo a los beta testers."
