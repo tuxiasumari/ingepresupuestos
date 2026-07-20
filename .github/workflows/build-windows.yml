@@ -152,8 +152,17 @@ jobs:
           path: |
             dist/ingepresupuestos-windows.zip
             dist/ingepresupuestos-setup-v*.exe
-            dist/IngePresupuestos-*.msix
           retention-days: 3
+
+      # El .msix va SOLO a Partner Center (Microsoft Store) — no es un binario
+      # público, así que no se publica en el Release ni en R2. Se guarda como
+      # artifact aparte con retención larga para tener tiempo de subirlo.
+      - name: Subir MSIX (artifact para Partner Center)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingepresupuestos-msix
+          path: dist/IngePresupuestos-*.msix
+          retention-days: 90
 
       # Si el workflow se disparó por tag (v0.5.0, v1.0.0, etc.),
       # publica AMBOS archivos en la sección Releases del repo.
@@ -164,7 +173,6 @@ jobs:
           files: |
             dist/ingepresupuestos-windows.zip
             dist/ingepresupuestos-setup-v*.exe
-            dist/IngePresupuestos-*.msix
           generate_release_notes: true
 
       # ── Subir a Cloudflare R2 (opcional: requiere los secretos R2_*) ───────
@@ -184,6 +192,6 @@ jobs:
           EP="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           aws s3 cp "dist/ingepresupuestos-setup-v${V}.exe" "s3://ingepresupuestos-downloads/v${V}/" --endpoint-url "$EP"
           aws s3 cp "dist/ingepresupuestos-windows.zip" "s3://ingepresupuestos-downloads/v${V}/" --endpoint-url "$EP"
-          # .msix (Microsoft Store, sin firmar) — durable para enviarlo a Partner Center.
-          aws s3 cp "dist/IngePresupuestos-${V}.msix" "s3://ingepresupuestos-downloads/v${V}/" --endpoint-url "$EP"
+          # El .msix NO se sube a R2 ni al Release: es solo para Partner Center
+          # (Microsoft Store). Queda como artifact de la corrida (ver retención).
           echo "✓ binarios Windows subidos a R2/v${V}/"
