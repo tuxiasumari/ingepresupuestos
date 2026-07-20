@@ -6756,6 +6756,8 @@ class ValorizadoWidget(QWidget):
         set_tooltip(btn_ods,
                      "Exportar a OpenDocument Spreadsheet (.ods) — "
                      "requiere LibreOffice instalado")
+        from core.soffice import odf_export_ofrecible
+        btn_ods.setVisible(odf_export_ofrecible())   # oculto en Flathub (sin LibreOffice del host)
         tb_hl.addWidget(btn_ods)
 
         vl.addWidget(tb)
@@ -8301,6 +8303,8 @@ class CurvaSWidget(QWidget):
         set_tooltip(btn_odt,
                       "Exportar reporte editable .odt (LibreOffice / "
                       "OpenOffice). Requiere LibreOffice instalado.")
+        from core.soffice import odf_export_ofrecible
+        btn_odt.setVisible(odf_export_ofrecible())   # oculto en Flathub (sin LibreOffice del host)
         tb_hl.addWidget(btn_odt)
 
         vl.addWidget(tb)
@@ -10068,6 +10072,8 @@ class InsumosWidget(QWidget):
         btn_ods.setCursor(Qt.PointingHandCursor)
         btn_ods.clicked.connect(self._exportar_ods)
         set_tooltip(btn_ods, "Exportar a ODS — requiere LibreOffice")
+        from core.soffice import odf_export_ofrecible
+        btn_ods.setVisible(odf_export_ofrecible())   # oculto en Flathub (sin LibreOffice del host)
         tb_hl.addWidget(btn_ods)
 
         vl.addWidget(tb)

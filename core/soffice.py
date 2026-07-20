@@ -123,6 +123,24 @@ def soffice_disponible() -> bool:
     return find_soffice() is not None
 
 
+_odf_ofrecible_cache: Optional[bool] = None
+
+
+def odf_export_ofrecible() -> bool:
+    """Si conviene OFRECER en la UI los botones de exportación ODT/ODS.
+
+    Devuelve False solo en la edición Flatpak SIN acceso al LibreOffice del host
+    (Flathub): allí ODT/ODS nunca pueden funcionar y no se puede instalar
+    LibreOffice dentro del sandbox, así que esos botones deben ocultarse. En
+    instalación nativa sin LibreOffice devuelve True: se muestran los botones con
+    su aviso de cómo instalarlo (discoverability). Resultado cacheado por proceso."""
+    global _odf_ofrecible_cache
+    if _odf_ofrecible_cache is None:
+        from core.config import es_flatpak
+        _odf_ofrecible_cache = not (es_flatpak() and not soffice_disponible())
+    return _odf_ofrecible_cache
+
+
 def mensaje_instalacion() -> str:
     """Devuelve un mensaje user-facing con instrucciones de instalación
     según la plataforma actual."""

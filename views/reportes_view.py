@@ -890,23 +890,31 @@ class ReportesView(QWidget):
         self._regenerar_preview()
         self._actualizar_visibilidad_export(codigo)
 
+    def _odf_export_oculto(self) -> bool:
+        """True si hay que OCULTAR los botones ODS/ODT/Pack-LibreOffice: solo en
+        la edición Flathub (Flatpak sin LibreOffice del host). Ver
+        core.soffice.odf_export_ofrecible()."""
+        from core.soffice import odf_export_ofrecible
+        return not odf_export_ofrecible()
+
     def _actualizar_visibilidad_export(self, codigo: str):
         """Muestra/oculta Excel/ODS/Word/ODT/MPP según si el tipo soporta el formato.
         Para 'completo' solo se permite Guardar PDF + Imprimir."""
         es_completo = (codigo == 'completo')
+        odf_oculto  = self._odf_export_oculto()   # Flathub sin LibreOffice del host
         # Word / ODT — además de los tipos del módulo, agregar curva_s
         word_ok = ((codigo in _WORD_TIPOS) or (codigo == 'cronograma_curva_s'))
         odt_ok  = ((codigo in _ODT_TIPOS)  or (codigo == 'cronograma_curva_s'))
         self._btn_xlsx.setVisible((codigo in _EXCEL_TIPOS) and not es_completo)
-        self._btn_ods.setVisible((codigo in _ODS_TIPOS) and not es_completo)
+        self._btn_ods.setVisible((codigo in _ODS_TIPOS) and not es_completo and not odf_oculto)
         self._btn_word.setVisible(word_ok and not es_completo)
-        self._btn_odt.setVisible(odt_ok and not es_completo)
+        self._btn_odt.setVisible(odt_ok and not es_completo and not odf_oculto)
         self._btn_mpp.setVisible((codigo in _MPP_TIPOS) and not es_completo)
         # PNG aplica a todos los reportes excepto el Completo.
         self._btn_png.setVisible(not es_completo)
         # Packs solo en Reporte Completo
         self._btn_pack_office.setVisible(es_completo)
-        self._btn_pack_libre.setVisible(es_completo)
+        self._btn_pack_libre.setVisible(es_completo and not odf_oculto)
         # Fila de casillas de secciones solo en Reporte Completo
         if hasattr(self, '_sec_frame'):
             self._sec_frame.setVisible(es_completo)
